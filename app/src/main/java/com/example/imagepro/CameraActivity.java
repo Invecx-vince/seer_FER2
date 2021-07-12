@@ -30,6 +30,7 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
     private Mat mGray;
     private CameraBridgeViewBase mOpenCvCameraView;
     private fer face_recognizer;
+    int counter = 0;
     private BaseLoaderCallback mLoaderCallback =new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -71,6 +72,7 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
         mOpenCvCameraView=(CameraBridgeViewBase) findViewById(R.id.frame_Surface);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
+        mOpenCvCameraView.setMaxFrameSize(1280, 760);
 
         try{
             int inputSize = 48;
