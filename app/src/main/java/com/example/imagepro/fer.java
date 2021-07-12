@@ -99,6 +99,52 @@ public class fer {
             bitmap = Bitmap.createBitmap(crpd_face_rgba.cols(),crpd_face_rgba.rows(),Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(crpd_face_rgba,bitmap);
 
+            //Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap,48,48,false);
+            //ByteBuffer byteBuffer = convertBitmaptoByteBuffer(scaledBitmap);
+            //float[][] emotion = new float[1][1];
+            //interpreter.run(byteBuffer,emotion);
+            //Log.d("expression", "Output "+ Array.get(Array.get(emotion,0),0));
+
+            //float emotion_v = (float)Array.get(Array.get(emotion,0),0);
+            //String emotion_s = getEmoText(emotion_v);
+            //Imgproc.putText(mat_image,emotion_s+" ("+emotion_v+") ",
+            //        new Point((int)f_arr[i].tl().x+10,(int)f_arr[i].tl().y+20),
+            //        1,1.5,new Scalar(0,0,255,150),3);
+        }
+
+        //re-flip back to original orientation
+        Core.flip(mat_image.t(),mat_image,0);
+        return mat_image;
+    }
+    public String readImage2(Mat mat_image){
+        //flip 90 degrees
+        String emotion_s="none";
+        Core.flip(mat_image.t(),mat_image,1);
+        Mat grayImg = new Mat();
+        Imgproc.cvtColor(mat_image,grayImg,Imgproc.COLOR_RGBA2GRAY);
+        height = grayImg.height();
+        width = grayImg.width();
+
+        int absFaceSize = (int)(height*0.1);
+        MatOfRect faces = new MatOfRect();
+        if(cascadeClassifier != null){
+            cascadeClassifier.detectMultiScale(grayImg,faces,1.1,2,2,
+                    new Size(absFaceSize,absFaceSize),new Size());
+        }
+        Rect[] f_arr= faces.toArray();
+
+        for(int i=0;i<f_arr.length;i++){
+            Imgproc.rectangle(mat_image,f_arr[i].tl(),f_arr[i].br(),new Scalar(0,255,0,255),1);
+
+            Rect crpd_face = new Rect((int)f_arr[i].tl().x,(int)f_arr[i].tl().y,
+                    ((int)f_arr[i].br().x)-(int)(f_arr[i].tl().x),
+                    ((int)f_arr[i].br().y)-(int)(f_arr[i].tl().y)
+            );
+            Mat crpd_face_rgba = new Mat(mat_image,crpd_face);
+            Bitmap bitmap = null;
+            bitmap = Bitmap.createBitmap(crpd_face_rgba.cols(),crpd_face_rgba.rows(),Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(crpd_face_rgba,bitmap);
+
             Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap,48,48,false);
             ByteBuffer byteBuffer = convertBitmaptoByteBuffer(scaledBitmap);
             float[][] emotion = new float[1][1];
@@ -106,15 +152,15 @@ public class fer {
             //Log.d("expression", "Output "+ Array.get(Array.get(emotion,0),0));
 
             float emotion_v = (float)Array.get(Array.get(emotion,0),0);
-            String emotion_s = getEmoText(emotion_v);
-            Imgproc.putText(mat_image,emotion_s+" ("+emotion_v+") ",
-                    new Point((int)f_arr[i].tl().x+10,(int)f_arr[i].tl().y+20),
-                    1,1.5,new Scalar(0,0,255,150),3);
+            emotion_s = getEmoText(emotion_v);
+            //Imgproc.putText(mat_image,emotion_s+" ("+emotion_v+") ",
+            //        new Point((int)f_arr[i].tl().x+10,(int)f_arr[i].tl().y+20),
+            //        1,1.5,new Scalar(0,0,255,150),3);
         }
 
         //re-flip back to original orientation
-        Core.flip(mat_image.t(),mat_image,0);
-        return mat_image;
+        //Core.flip(mat_image.t(),mat_image,0);
+        return emotion_s;
     }
 
     private String getEmoText(float emotion_v) {
