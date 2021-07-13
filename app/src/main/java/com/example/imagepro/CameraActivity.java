@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.media.MediaActionSound;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,7 +16,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
+import android.speech.tts.TextToSpeech;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -29,6 +30,8 @@ import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Locale;
 
 public class CameraActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2{
     private static final String TAG="MainActivity";
@@ -37,6 +40,7 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
     private Mat mGray;
     private CameraBridgeViewBase mOpenCvCameraView;
     private ImageView flip;
+    private TextToSpeech speaker;
     private ImageView takeImg;
     private TextView emoTxt;
     private fer face_recognizer;
@@ -90,6 +94,18 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
         }
 
         setContentView(R.layout.activity_camera);
+
+        speaker = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int i) {
+
+                // if No error is found then only it will run
+                if(i!=TextToSpeech.ERROR){
+                    // To Choose language of speech
+                    speaker.setLanguage(Locale.UK);
+                }
+            }
+        });
 
         mOpenCvCameraView=(CameraBridgeViewBase) findViewById(R.id.frame_Surface);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
@@ -191,20 +207,34 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
             Core.flip(mRgba,mRgba,-1);
             Core.flip(mGray,mGray,-1);
         }
-        if(img==1)
-            img = img_capture(img,mRgba);
+
+        //img = img_capture(img, mRgba);
+        if(img==1){
+            String test = face_recognizer.readImage2(mRgba);
+            HashMap<String, String> myHashAlarm = new HashMap<String, String>();
+            myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_STREAM, String.valueOf(AudioManager.STREAM_ALARM));
+            myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "yeeeet");
+            speaker.speak(test, TextToSpeech.QUEUE_FLUSH, myHashAlarm);
+            img=0;
+        }
         mRgba = face_recognizer.readImage(mRgba);
         return mRgba;
 
     }
 
     private int img_capture(int takeImg,Mat mRgba) {
-        Mat save = new Mat();
-        Core.flip(mRgba.t(),save,1);
-        Imgproc.cvtColor(save,save,Imgproc.COLOR_mRGBA2RGBA);
-        String test = face_recognizer.readImage2(mRgba);
-        emoTxt.setText("Emotion: "+test);
-
+        if(takeImg==1){
+            Mat save = new Mat();
+            Core.flip(mRgba.t(), save, 1);
+            Imgproc.cvtColor(save, save, Imgproc.COLOR_mRGBA2RGBA);
+            String test = face_recognizer.readImage2(mRgba);
+            String speech = "Emotions detected are: " + test;
+            emoTxt.setText("Emotion: " + test);
+            HashMap<String, String> myHashAlarm = new HashMap<String, String>();
+            myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_STREAM, String.valueOf(AudioManager.STREAM_ALARM));
+            myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "yeeeet");
+            speaker.speak(speech, TextToSpeech.QUEUE_FLUSH, myHashAlarm);
+        }
         return 0;
     }
 

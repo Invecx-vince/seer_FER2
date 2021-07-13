@@ -118,7 +118,7 @@ public class fer {
     }
     public String readImage2(Mat mat_image){
         //flip 90 degrees
-        String emotion_s="none";
+        String emotion_s="";
         Core.flip(mat_image.t(),mat_image,1);
         Mat grayImg = new Mat();
         Imgproc.cvtColor(mat_image,grayImg,Imgproc.COLOR_RGBA2GRAY);
@@ -152,7 +152,7 @@ public class fer {
             //Log.d("expression", "Output "+ Array.get(Array.get(emotion,0),0));
 
             float emotion_v = (float)Array.get(Array.get(emotion,0),0);
-            emotion_s = getEmoText(emotion_v);
+            emotion_s += getEmoText(emotion_v)+" ";
             //Imgproc.putText(mat_image,emotion_s+" ("+emotion_v+") ",
             //        new Point((int)f_arr[i].tl().x+10,(int)f_arr[i].tl().y+20),
             //        1,1.5,new Scalar(0,0,255,150),3);
