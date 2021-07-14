@@ -110,7 +110,7 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
         mOpenCvCameraView=(CameraBridgeViewBase) findViewById(R.id.frame_Surface);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
-        mOpenCvCameraView.setMaxFrameSize(1280, 760);
+        //mOpenCvCameraView.setMaxFrameSize(1280, 760);
         flip = (ImageView)findViewById(R.id.button);
         emoTxt = (TextView)findViewById(R.id.emotionView);
         takeImg = (ImageView)findViewById(R.id.take_pic_btn);
@@ -146,8 +146,8 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
         try{
             int inputSize = 48;
             face_recognizer = new fer(getAssets(),CameraActivity.this,
-                    "model300.tflite",inputSize);
-                    // "neo_model.tflite",inputSize);
+                    //"model300.tflite",inputSize);
+                     "neo_model.tflite",inputSize);
         }
         catch(IOException e){
             e.printStackTrace();
@@ -203,6 +203,7 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame){
         mRgba=inputFrame.rgba();
         mGray=inputFrame.gray();
+        mRgba = face_recognizer.readImage(mRgba);
         if(cameraState==1){
             Core.flip(mRgba,mRgba,-1);
             Core.flip(mGray,mGray,-1);
@@ -210,14 +211,24 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
 
         //img = img_capture(img, mRgba);
         if(img==1){
+            new fer_t(mRgba);
+            try{
+                //nothing
+            }
+            catch(Exception e){
+                System.out.println("yeet");
+            }
+            img=0;
+            /*
             String test = face_recognizer.readImage2(mRgba);
             HashMap<String, String> myHashAlarm = new HashMap<String, String>();
             myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_STREAM, String.valueOf(AudioManager.STREAM_ALARM));
             myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "yeeeet");
             speaker.speak(test, TextToSpeech.QUEUE_FLUSH, myHashAlarm);
             img=0;
+            */
         }
-        mRgba = face_recognizer.readImage(mRgba);
+
         return mRgba;
 
     }
@@ -236,6 +247,30 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
             speaker.speak(speech, TextToSpeech.QUEUE_FLUSH, myHashAlarm);
         }
         return 0;
+    }
+
+    private class fer_t implements Runnable{
+        Thread t;
+        Mat rgba;
+        fer_t(Mat mRgba){
+            t = new Thread(this,"Thread");
+            t.start();
+            rgba = mRgba;
+        }
+        public void run(){
+            try{
+                String test = face_recognizer.readImage2(rgba);
+                String speech = "Emotions detected are: " + test;
+                HashMap<String, String> myHashAlarm = new HashMap<String, String>();
+                myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_STREAM, String.valueOf(AudioManager.STREAM_ALARM));
+                myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "yeeeet");
+                speaker.speak(speech, TextToSpeech.QUEUE_FLUSH, myHashAlarm);
+            }
+            catch(Exception e){
+                emoTxt.setText(e.toString());
+
+            }
+        }
     }
 
 
